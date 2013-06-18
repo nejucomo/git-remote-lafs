@@ -1,5 +1,5 @@
 import os
-from twisted.internet import defer
+from twisted.internet import defer, reactor
 from twisted.protocols import basic
 
 from .logmixin import LogMixin
@@ -25,17 +25,27 @@ class CommandProtocol (basic.LineReceiver, LogMixin):
     def lineReceived(self, line):
         self.log.debug('Received line %r', line)
 
-        args = line.split(' ', 1)
-        name = args.pop(0)
+        if line == '':
+            self._git_quit()
+        else:
+            args = line.split(' ', 1)
+            name = args.pop(0)
 
-        cmdfunc = getattr(self, 'command_' + name)
+            cmdfunc = getattr(self, 'git_' + name)
 
-        d = defer.maybeDeferred(cmdfunc, *args)
+            d = defer.maybeDeferred(cmdfunc, *args)
 
-        @d.addCallback
-        def handle_response(response):
-            self.log.debug('Sending response for %r:\n%s', name, response)
-            self.transport.write(response + self.delimiter)
+            @d.addCallback
+            def handle_response(response):
+                self.log.debug('Sending response for %r:\n%s', name, response)
+                self.transport.write(response + self.delimiter)
 
-    def command_capabilities(self):
+    def _git_quit(self):
+        self.log.debug('Quit from git.')
+        reactor.stop()
+
+    def git_capabilities(self):
         return self.delimiter.join(self.GitCapabilities) + self.delimiter
+
+    def git_list(self):
+        return ('0' * 39) + '7 refs/heads/master' + self.delimiter # BUG: Implement me.
