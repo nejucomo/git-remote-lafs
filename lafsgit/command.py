@@ -27,6 +27,10 @@ class CommandProtocol (basic.LineReceiver, LogMixin):
     #    return basic.LineReceiver.dataReceived(self, data)
 
     def lineReceived(self, line):
+        defer.maybeDeferred(self._raw_lineReceived, line)
+
+
+    def _raw_lineReceived(self, line):
         self._log.debug('Received line %r', line)
 
         if line == '':
@@ -43,6 +47,8 @@ class CommandProtocol (basic.LineReceiver, LogMixin):
             def handle_response(response):
                 self._log.debug('Sending response for %r:\n%s', name, response)
                 self.transport.write(response + self.delimiter)
+
+            return d
 
     def _git_quit(self):
         self._log.debug('Quit from git.')
