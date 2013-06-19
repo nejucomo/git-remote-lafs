@@ -1,4 +1,5 @@
 import os
+import logging
 from twisted.internet import defer, reactor
 from twisted.protocols import basic
 
@@ -7,23 +8,26 @@ from .logmixin import LogMixin
 
 class CommandProtocol (basic.LineReceiver, LogMixin):
 
-    GitCapabilities = ['option']
+    GitCapabilities = ['option', 'push']
+    LogLevels = [logging.CRITICAL, logging.ERROR, logging.WARN, logging.INFO, logging.DEBUG]
 
     delimiter = os.linesep
 
     def __init__(self, nameish, url):
         LogMixin.__init__(self)
-        self.log.debug('%r', {'nameish': nameish, 'url': url})
+        self._log.debug('%r', {'nameish': nameish, 'url': url})
+
+        self._showProgress = False
 
     def connectionMade(self):
-        self.log.debug('Ready for commands.')
+        self._log.debug('Ready for commands.')
 
     #def dataReceived(self, data): # Just for temporary tracing debug.
-    #    self.log.debug('dataReceived(%r)', data)
+    #    self._log.debug('dataReceived(%r)', data)
     #    return basic.LineReceiver.dataReceived(self, data)
 
     def lineReceived(self, line):
-        self.log.debug('Received line %r', line)
+        self._log.debug('Received line %r', line)
 
         if line == '':
             self._git_quit()
@@ -37,15 +41,37 @@ class CommandProtocol (basic.LineReceiver, LogMixin):
 
             @d.addCallback
             def handle_response(response):
-                self.log.debug('Sending response for %r:\n%s', name, response)
+                self._log.debug('Sending response for %r:\n%s', name, response)
                 self.transport.write(response + self.delimiter)
 
     def _git_quit(self):
-        self.log.debug('Quit from git.')
+        self._log.debug('Quit from git.')
         reactor.stop()
 
     def git_capabilities(self):
         return self.delimiter.join(self.GitCapabilities) + self.delimiter
 
-    def git_list(self):
-        return ('0' * 39) + '7 refs/heads/master' + self.delimiter # BUG: Implement me.
+    def git_option(self, arg):
+        try:
+            self._raw_git_option(arg)
+        except NotImplementedError:
+            return 'unsupported'
+        except Exception, e: # BUG: Dangerous!
+            return 'error %r %r' % (e, '; '.join([ str(a) for a in e.args ]))
+        else:
+            return 'ok'
+
+    def _raw_git_option(self, arg):
+        name, optarg = arg.split(' ', 1)
+        if name == 'progress':
+            self._showProgress = {'true': True, 'false': False}[optarg]
+        elif name == 'verbosity':
+            gitlevel = int(optarg)
+            loglevel = self.LogLevels[min(gitlevel, len(self.LogLevels) - 1)]
+            # logging.getLogger().setLevel(loglevel) # FIXME: Temporarily disabled to force DEBUG level.
+            self._log.debug('(disabled) Set log level to: git %r, python %r', gitlevel, logging.getLevelName(loglevel))
+        else:
+            raise NotImplementedError()
+
+    def git_list(self, arg=None):
+        return '' # BUG: Implement me.
