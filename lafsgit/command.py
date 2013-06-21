@@ -13,18 +13,22 @@ class CommandProtocol (basic.LineReceiver, LogMixin):
 
     delimiter = os.linesep
 
+
     def __init__(self, nameish, url):
         LogMixin.__init__(self)
         self._log.debug('%r', {'nameish': nameish, 'url': url})
 
         self._showProgress = False
 
+
     def connectionMade(self):
         self._log.debug('Ready for commands.')
+
 
     #def dataReceived(self, data): # Just for temporary tracing debug.
     #    self._log.debug('dataReceived(%r)', data)
     #    return basic.LineReceiver.dataReceived(self, data)
+
 
     def lineReceived(self, line):
         defer.maybeDeferred(self._raw_lineReceived, line)
@@ -50,12 +54,15 @@ class CommandProtocol (basic.LineReceiver, LogMixin):
 
             return d
 
+
     def _git_quit(self):
         self._log.debug('Quit from git.')
         reactor.stop()
 
+
     def git_capabilities(self):
         return self.delimiter.join(self.GitCapabilities) + self.delimiter
+
 
     def git_option(self, arg):
         try:
@@ -66,6 +73,7 @@ class CommandProtocol (basic.LineReceiver, LogMixin):
             return 'error %r %r' % (e, '; '.join([ str(a) for a in e.args ]))
         else:
             return 'ok'
+
 
     def _raw_git_option(self, arg):
         name, optarg = arg.split(' ', 1)
@@ -78,6 +86,7 @@ class CommandProtocol (basic.LineReceiver, LogMixin):
             self._log.debug('(disabled) Set log level to: git %r, python %r', gitlevel, logging.getLevelName(loglevel))
         else:
             raise NotImplementedError()
+
 
     def git_list(self, arg=None):
         return '' # BUG: Implement me.
