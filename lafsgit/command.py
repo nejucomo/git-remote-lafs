@@ -11,7 +11,7 @@ class CommandProtocol (basic.LineReceiver, LogMixin):
     GitCapabilities = ['option', 'push']
     LogLevels = [logging.CRITICAL, logging.ERROR, logging.WARN, logging.INFO, logging.DEBUG]
 
-    delimiter = os.linesep
+    delimiter = '\n' # Based on a quick skim of transport-helper.c in git.
 
 
     def __init__(self, nameish, url):
