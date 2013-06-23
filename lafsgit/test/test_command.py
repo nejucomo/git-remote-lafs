@@ -15,23 +15,22 @@ class CommandProtocolTests (TestCase):
 
 
     def test_capabilities(self):
-        self.proto.dataReceived('capabilities\n')
+        caps = CommandProtocol.GitCapabilities
 
-        expected = '\n'.join(CommandProtocol.GitCapabilities) + '\n\n'
-
-        self.assertEqual(expected, self.trans.value())
+        self._check_cmd_io(
+            input = 'capabilities\n',
+            expected = '\n'.join(caps) + '\n\n')
 
 
     def test_valid_option_accepted(self):
-        lines = [
-            'option progress true\n',
-            'option progress false\n',
-            'option verbosity 0\n',
-            'option progress true\n',
-            'option verbosity 3\n',
-            ]
+        self._check_cmd_io('option progress true\n', 'ok\n')
+        self._check_cmd_io('option progress false\n', 'ok\n')
+        self._check_cmd_io('option verbosity 0\n', 'ok\n')
+        self._check_cmd_io('option progress true\n', 'ok\n')
+        self._check_cmd_io('option verbosity 3\n', 'ok\n')
 
-        for line in lines:
-            self.proto.dataReceived(line)
-            self.assertEqual('ok\n', self.trans.value())
-            self.trans.clear()
+
+    def _check_cmd_io(self, input, expected):
+        self.trans.clear()
+        self.proto.dataReceived(input)
+        self.assertEqual(expected, self.trans.value())
