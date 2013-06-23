@@ -20,3 +20,18 @@ class CommandProtocolTests (TestCase):
         expected = '\n'.join(CommandProtocol.GitCapabilities) + '\n\n'
 
         self.assertEqual(expected, self.trans.value())
+
+
+    def test_valid_option_accepted(self):
+        lines = [
+            'option progress true\n',
+            'option progress false\n',
+            'option verbosity 0\n',
+            'option progress true\n',
+            'option verbosity 3\n',
+            ]
+
+        for line in lines:
+            self.proto.dataReceived(line)
+            self.assertEqual('ok\n', self.trans.value())
+            self.trans.clear()
