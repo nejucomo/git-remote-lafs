@@ -31,6 +31,7 @@ class CommandProtocolTests (TestCase):
 
 
     def _check_cmd_io(self, input, expected):
+        """Test a "surface" command which does not interact with a LAFS webapi."""
         self.trans.clear()
         self.proto.dataReceived(input)
         self.assertEqual(expected, self.trans.value())
