@@ -5,8 +5,13 @@ import (
 	"os"
 )
 
+const (
+	logPrefix = "[git-remote-lafs] "
+	logFlags  = log.LstdFlags
+)
+
 func main() {
-	mainWithLogger(log.New(os.Stderr, "git-remote-lafs", log.LstdFlags))
+	mainWithLogger(log.New(os.Stderr, logPrefix, logFlags))
 }
 
 func mainWithLogger(logger *log.Logger) {
