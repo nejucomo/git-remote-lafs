@@ -1,7 +1,14 @@
 package main
 
-import "fmt"
+import (
+	"io"
+	"log"
+)
 
 func main() {
-	fmt.Println("Hello, 世界")
+	mainWithLogger(log.New(io.Stderr, "git-remote-lafs", log.LstdFlags))
+}
+
+func mainWithLogger(logger *log.Logger) {
+	logger.Println("Hello World!")
 }
