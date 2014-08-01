@@ -1,12 +1,12 @@
 package main
 
 import (
-	"io"
 	"log"
+	"os"
 )
 
 func main() {
-	mainWithLogger(log.New(io.Stderr, "git-remote-lafs", log.LstdFlags))
+	mainWithLogger(log.New(os.Stderr, "git-remote-lafs", log.LstdFlags))
 }
 
 func mainWithLogger(logger *log.Logger) {
