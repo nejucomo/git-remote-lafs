@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"os"
 )
@@ -15,5 +16,9 @@ func main() {
 }
 
 func mainWithLogger(logger *log.Logger) {
-	logger.Println("Hello World!")
+	flag.Parse()
+	repo := flag.Arg(0)
+	url := flag.Arg(1)
+
+	logger.Printf("Hello World! repo: %v; url %v\n", repo, url)
 }
