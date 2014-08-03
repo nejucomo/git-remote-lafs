@@ -20,5 +20,5 @@ func mainWithLogger(logger *log.Logger) {
 	repo := flag.Arg(0)
 	url := flag.Arg(1)
 
-	logger.Printf("Hello World! repo: %v; url %v\n", repo, url)
+	logger.Printf("Hello World! repo %#v; url %#v\n", repo, url)
 }
