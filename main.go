@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 )
@@ -12,13 +13,35 @@ const (
 )
 
 func main() {
-	mainWithLogger(log.New(os.Stderr, logPrefix, logFlags))
+	logger := log.New(os.Stderr, logPrefix, logFlags)
+	err := run(logger)
+	if err == nil {
+		os.Exit(0)
+	} else {
+		logger.Printf("Error: %s\n", err)
+		os.Exit(1)
+	}
 }
 
-func mainWithLogger(logger *log.Logger) {
-	flag.Parse()
-	repo := flag.Arg(0)
-	url := flag.Arg(1)
+func run(logger *log.Logger) error {
+	repo, url, err := parseArgs()
+	if err != nil {
+		return err
+	}
 
-	logger.Printf("Hello World! repo %#v; url %#v\n", repo, url)
+	logger.Printf("repo %#v; url %#v\n", repo, url)
+	return nil
+}
+
+func parseArgs() (repo, url string, err error) {
+	flag.Parse()
+	args := flag.Args()
+
+	if len(args) == 2 {
+		repo = args[0]
+		url = args[1]
+	} else {
+		err = fmt.Errorf("Wrong number of arguments: %#v\n", args)
+	}
+	return
 }
