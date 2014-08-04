@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -16,7 +18,7 @@ const (
 func main() {
 	logger := log.New(os.Stderr, logPrefix, logFlags)
 
-	err := run(logger)
+	err := run(logger, bufio.NewReader(os.Stdin), bufio.NewWriter(os.Stdout))
 
 	if err == nil {
 		os.Exit(0)
@@ -26,7 +28,7 @@ func main() {
 	}
 }
 
-func run(logger *log.Logger) error {
+func run(logger *log.Logger, in *bufio.Reader, out *bufio.Writer) error {
 	repo, url, err := parseArgs()
 	if err != nil {
 		return err
@@ -41,7 +43,7 @@ func run(logger *log.Logger) error {
 
 	logger.Printf("cap %#v\n", cap)
 
-	return nil
+	return processCommands(logger, cap, in, out)
 }
 
 func parseArgs() (repo, url string, err error) {
@@ -65,4 +67,19 @@ func parseLafsUrl(url string) (cap string, err error) {
 	}
 
 	return
+}
+
+func processCommands(logger *log.Logger, cap string, in *bufio.Reader, out *bufio.Writer) (err error) {
+	for err == nil {
+		line, err := in.ReadString('\n')
+		if err == nil || err == io.EOF {
+			err = processCommand(logger, cap, line, out)
+		}
+	}
+	return
+}
+
+func processCommand(logger *log.Logger, cap, command string, out *bufio.Writer) error {
+	logger.Printf("executing command: %#v\n", command)
+	return fmt.Errorf("Not implemented: processCommand")
 }
