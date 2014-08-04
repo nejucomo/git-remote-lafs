@@ -15,35 +15,38 @@ const (
 	logFlags  = log.LstdFlags
 )
 
-func main() {
-	logger := log.New(os.Stderr, logPrefix, logFlags)
+type OutputFormatter func(format string, v ...interface{})
 
-	err := run(logger, bufio.NewReader(os.Stdin), bufio.NewWriter(os.Stdout))
+func main() {
+	err := run(
+		makeDebugFunc(os.Stderr),
+		bufio.NewReader(os.Stdin),
+		bufio.NewWriter(os.Stdout))
 
 	if err == nil {
 		os.Exit(0)
 	} else {
-		logger.Printf("Error: %s\n", err)
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 		os.Exit(1)
 	}
 }
 
-func run(logger *log.Logger, in *bufio.Reader, out *bufio.Writer) error {
+func run(debug OutputFormatter, in *bufio.Reader, out *bufio.Writer) error {
 	repo, url, err := parseArgs()
 	if err != nil {
 		return err
 	}
 
-	logger.Printf("repo %#v; url %#v\n", repo, url)
+	debug("repo %#v; url %#v", repo, url)
 
 	cap, err := parseLafsUrl(url)
 	if err != nil {
 		return err
 	}
 
-	logger.Printf("cap %#v\n", cap)
+	debug("cap %#v", cap)
 
-	return processCommands(logger, cap, in, out)
+	return processCommands(debug, cap, in, out)
 }
 
 func parseArgs() (repo, url string, err error) {
@@ -54,7 +57,7 @@ func parseArgs() (repo, url string, err error) {
 		repo = args[0]
 		url = args[1]
 	} else {
-		err = fmt.Errorf("Wrong number of arguments: %#v\n", args)
+		err = fmt.Errorf("Wrong number of arguments: %#v", args)
 	}
 	return
 }
@@ -69,17 +72,41 @@ func parseLafsUrl(url string) (cap string, err error) {
 	return
 }
 
-func processCommands(logger *log.Logger, cap string, in *bufio.Reader, out *bufio.Writer) (err error) {
+func processCommands(debug OutputFormatter, cap string, in *bufio.Reader, out *bufio.Writer) (err error) {
 	for err == nil {
-		line, err := in.ReadString('\n')
+		line, err2 := in.ReadString('\n')
+		err = err2
 		if err == nil || err == io.EOF {
-			err = processCommand(logger, cap, line, out)
+			err = processCommand(debug, cap, line[:len(line)-1], out)
 		}
 	}
 	return
 }
 
-func processCommand(logger *log.Logger, cap, command string, out *bufio.Writer) error {
-	logger.Printf("executing command: %#v\n", command)
-	return fmt.Errorf("Not implemented: processCommand")
+func processCommand(debug OutputFormatter, cap, command string, out *bufio.Writer) (err error) {
+	debug("executing command: %#v", command)
+
+	defer out.Flush()
+
+	if command == "" {
+		// Hangup:
+		err = io.EOF
+	} else if command == "capabilities" {
+		out.WriteString("push\n\n")
+	} else if command == "list for-push" {
+		out.WriteString("\n")
+	} else {
+		err = fmt.Errorf("Unknown command: %#v", command)
+	}
+
+	return
+}
+
+func makeDebugFunc(w io.Writer) OutputFormatter {
+	logger := log.New(w, logPrefix, logFlags)
+
+	return func(format string, v ...interface{}) {
+		fullformat := fmt.Sprintf("[DEBUG] %s\n", format)
+		logger.Printf(fullformat, v...)
+	}
 }
