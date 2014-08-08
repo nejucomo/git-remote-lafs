@@ -84,8 +84,10 @@ class TestWithCoverageAndTrialInAVirtualEnvCommand (Command):
         # Coverage and trial dump things into cwd, so cd:
         os.chdir(self.testdir)
 
-        run(self.coverage, 'run', '--branch', '--source', self.pypkg, self.trial, PYPACKAGE)
-        run(self.coverage, 'html')
+        try:
+            run(self.coverage, 'run', '--branch', '--source', self.pypkg, self.trial, PYPACKAGE)
+        finally:
+            run(self.coverage, 'html')
 
     def _initialize_virtualenv(self):
         run('virtualenv', '--no-site-packages', self.venvdir)
