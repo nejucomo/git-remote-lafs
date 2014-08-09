@@ -10,7 +10,3 @@ class LafsWapiTests (TestCase):
         self.wapiurl = 'http://localhost:3456/'
         self.mreactor = proto_helpers.MemoryReactor()
         self.client = LafsWapiClient(self.mreactor, self.wapiurl)
-
-
-    def test_create_mutable_directory(self):
-        raise NotImplementedError()

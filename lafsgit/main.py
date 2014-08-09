@@ -1,12 +1,10 @@
-#! /usr/bin/env python
-
 import sys
 import logging
 
 from twisted.python import log as twistedlog
 from twisted.internet import reactor, stdio
 
-from .command import CommandProtocol
+from lafsgit import command
 
 DESCRIPTION = """
 Support for a Tahoe-LAFS specific git remote.
@@ -18,7 +16,7 @@ def main(args = sys.argv[1:]):
 
     [nameish, url] = args
 
-    stdio.StandardIO(CommandProtocol(nameish, url))
+    stdio.StandardIO(command.CommandProtocol(nameish, url))
     reactor.run()
 
 
@@ -34,7 +32,3 @@ def init_logging():
         level=logging.DEBUG)
 
     twistedlog.PythonLoggingObserver().start()
-
-
-if __name__ == '__main__':
-    main()
