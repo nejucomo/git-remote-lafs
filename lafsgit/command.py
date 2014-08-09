@@ -3,10 +3,11 @@ import logging
 from twisted.internet import defer, reactor
 from twisted.protocols import basic
 
-from .logmixin import LogMixin
+from lafsgit.logmixin import LogMixin
 
 
 class CommandProtocol (basic.LineReceiver, LogMixin):
+    """I am a stdio git remote helper protocol that implements a git remote for LAFS storage."""
 
     GitCapabilities = ['option', 'push']
     LogLevels = [logging.CRITICAL, logging.ERROR, logging.WARN, logging.INFO, logging.DEBUG]
