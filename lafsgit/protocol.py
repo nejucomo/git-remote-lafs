@@ -1,4 +1,5 @@
 from twisted.protocols import basic
+from twisted.internet import defer
 
 from lafsgit.logmixin import LogMixin
 
@@ -19,7 +20,7 @@ class LineDispatcherProtocol (basic.LineOnlyReceiver, LogMixin):
     def lineReceived(self, line):
         self._log.debug('Received: %r', line)
 
-        d = self._handler(line)
+        d = defer.maybeDeferred(self._handler(line))
 
         @d.addCallback
         def responses_received(lines):
