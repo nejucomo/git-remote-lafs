@@ -16,7 +16,7 @@ class LineDispatcherProtocolTests (TestCase):
         self.assertEqual(m_getLogger.mock_calls, [call('LineDispatcherProtocol')])
 
 
-    def _test_lineReceived(self):
+    def _test_lineReceived(self, m_maybeDeferred):
 
         x = 'bananas!'
         m_handler = MagicMock()
@@ -26,22 +26,25 @@ class LineDispatcherProtocolTests (TestCase):
 
         ldp.lineReceived(x)
 
+        self.assertEqual(m_handler.mock_calls, [call(x)])
+
         self.assertEqual(
-            m_handler.mock_calls,
-            [call(x),
-             call(x).addCallback(ANY)])
+            m_maybeDeferred.mock_calls,
+            [call(m_handler.return_value),
+             call(m_handler.return_value).addCallback(ANY)])
 
         # Retrieve the internal callback:
-        (_, args, _) = m_handler.mock_calls[1]
+        (_, args, _) = m_maybeDeferred.mock_calls[1]
         (callback,) = args
 
         return callback, ldp.transport
 
 
     @patch('logging.getLogger')
-    def test_lineReceived_empty_response(self, m_getLogger):
+    @patch('twisted.internet.defer.maybeDeferred')
+    def test_lineReceived_empty_response(self, m_maybeDeferred, m_getLogger):
 
-        callback, m_transport = self._test_lineReceived()
+        callback, m_transport = self._test_lineReceived(m_maybeDeferred)
 
         # Now test the callback with 0 response lines:
         callback([])
@@ -51,9 +54,10 @@ class LineDispatcherProtocolTests (TestCase):
 
 
     @patch('logging.getLogger')
-    def test_lineReceived_with_response(self, m_getLogger):
+    @patch('twisted.internet.defer.maybeDeferred')
+    def test_lineReceived_with_response(self, m_maybeDeferred, m_getLogger):
 
-        callback, m_transport = self._test_lineReceived()
+        callback, m_transport = self._test_lineReceived(m_maybeDeferred)
 
         # Now test the callback with 0 response lines:
         callback(['a', 'b'])
