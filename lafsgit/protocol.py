@@ -10,5 +10,19 @@ class LineDispatcherProtocol (basic.LineOnlyReceiver, LogMixin):
     line-based protocols, such as in git-remote-helpers.
     """
 
+    delimiter = b'\n'
+
     def __init__(self, handler):
         LogMixin.__init__(self)
+        self._handler = handler
+
+    def lineReceived(self, line):
+        self._log.debug('Received: %r', line)
+
+        d = self._handler(line)
+
+        @d.addCallback
+        def responses_received(lines):
+            for line in lines:
+                self._log.debug('Sending: %r', line)
+                self.transport.write(line + self.delimiter)
