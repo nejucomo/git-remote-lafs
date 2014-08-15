@@ -24,6 +24,7 @@ class LineDispatcherProtocol (basic.LineOnlyReceiver, LogMixin):
 
         @d.addCallback
         def responses_received(lines):
-            for line in lines:
-                self._log.debug('Sending: %r', line)
-                self.transport.write(line + self.delimiter)
+            if lines is not None:
+                for line in lines:
+                    self._log.debug('Sending: %r', line)
+                    self.transport.write(line + self.delimiter)

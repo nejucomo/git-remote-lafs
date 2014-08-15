@@ -42,6 +42,19 @@ class LineDispatcherProtocolTests (TestCase):
 
     @patch('logging.getLogger')
     @patch('twisted.internet.defer.maybeDeferred')
+    def test_lineReceived_None_response(self, m_maybeDeferred, m_getLogger):
+
+        callback, m_transport = self._test_lineReceived(m_maybeDeferred)
+
+        # Now test the callback with 0 response lines:
+        callback(None)
+
+        # Assert nothing was written:
+        self.assertEqual(m_transport.mock_calls, [])
+
+
+    @patch('logging.getLogger')
+    @patch('twisted.internet.defer.maybeDeferred')
     def test_lineReceived_empty_response(self, m_maybeDeferred, m_getLogger):
 
         callback, m_transport = self._test_lineReceived(m_maybeDeferred)
