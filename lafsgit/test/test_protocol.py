@@ -14,4 +14,4 @@ class LineDispatcherProtocolTests (TestCase):
         LineDispatcherProtocol(sentinel.handler)
 
         # Note: This asserts there are no log calls in the constructor:
-        self.assertEqual(m_getLogger, [call('LineDispatcherProtocol')])
+        self.assertEqual(m_getLogger.mock_calls, [call('LineDispatcherProtocol')])
