@@ -1,4 +1,11 @@
+import sys
+
+from twisted.internet import reactor
+
 from lafsgit.logmixin import LogMixin
+
+
+UnknownCommandExitStatus = 1
 
 
 class GitController (LogMixin):
@@ -9,4 +16,6 @@ class GitController (LogMixin):
         if line == 'capabilities':
             return ['push']
         else:
-            raise NotImplementedError('Unsupported Command')
+            reactor.stop()
+            sys.stderr.write('Unknown Command %r\n' % (line,))
+            sys.exit(UnknownCommandExitStatus)
