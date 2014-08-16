@@ -33,31 +33,21 @@ def main(args = sys.argv[1:]):
 
         cmdclass={
             'test': TestWithCoverageAndTrialInAVirtualEnvCommand,
+            'test_integration': TestIntegrationCommand,
             },
         )
 
 
-class TestWithCoverageAndTrialInAVirtualEnvCommand (Command):
-    """Run unit tests with coverage analysis and reporting in a virtualenv.
+class VirtualEnvCommandBase (Command):
+    """A base command class for setup subcommands to be run within a virtual env."""
 
-    Note: A design goal of this is that all generated files (except for
-    .pyc files) will appear under ./build so that .gitignore can contain
-    only ./build and *.pyc, and a clean operation is merely 'rm -r ./build'.
-    """
-
-    # Internal settings:
-    TestToolRequirements = [
-        'coverage == 3.7.1',
-        ]
-
-    description = __doc__
+    TestToolRequirements = [] # Subclasses should override this with tools they require.
 
     user_options = [
     ]
 
     def __init__(self, dist):
         Command.__init__(self, dist)
-
         join = os.path.join
 
         self.basedir = os.path.dirname(os.path.abspath(__file__))
@@ -65,10 +55,10 @@ class TestWithCoverageAndTrialInAVirtualEnvCommand (Command):
         self.testdir = join(self.basedir, 'build', 'test')
         self.venvdir = join(self.testdir, 'venv')
 
-        bindir = os.path.join(self.venvdir, 'bin')
-        self.trial = os.path.join(bindir, 'trial')
-        self.pip = os.path.join(bindir, 'pip')
-        self.coverage = os.path.join(bindir, 'coverage')
+        self.bindir = os.path.join(self.venvdir, 'bin')
+        self.trial = os.path.join(self.bindir, 'trial')
+        self.pip = os.path.join(self.bindir, 'pip')
+        self.coverage = os.path.join(self.bindir, 'coverage')
 
     def initialize_options(self):
         pass
@@ -79,15 +69,11 @@ class TestWithCoverageAndTrialInAVirtualEnvCommand (Command):
     def run(self):
         self._initialize_virtualenv()
         self._install_testing_tools()
-        self._update_python_path()
 
         # Coverage and trial dump things into cwd, so cd:
         os.chdir(self.testdir)
 
-        try:
-            run(self.coverage, 'run', '--branch', '--source', self.pypkg, self.trial, PYPACKAGE)
-        finally:
-            run(self.coverage, 'html')
+        self.run_within_virtualenv()
 
     def _initialize_virtualenv(self):
         run('virtualenv', '--no-site-packages', self.venvdir)
@@ -101,11 +87,49 @@ class TestWithCoverageAndTrialInAVirtualEnvCommand (Command):
 
         run(self.pip, 'install', '--use-mirrors', '--requirement', reqspath)
 
+
+class TestWithCoverageAndTrialInAVirtualEnvCommand (VirtualEnvCommandBase):
+    """Run unit tests with coverage analysis and reporting in a virtualenv.
+
+    Note: A design goal of this is that all generated files (except for
+    .pyc files) will appear under ./build so that .gitignore can contain
+    only ./build and *.pyc, and a clean operation is merely 'rm -r ./build'.
+    """
+
+    description = __doc__
+
+    # Internal settings:
+    TestToolRequirements = [
+        'coverage == 3.7.1',
+        ]
+
+    def run_within_virtualenv(self):
+        self._update_python_path()
+        try:
+            run(self.coverage, 'run', '--branch', '--source', self.pypkg, self.trial, PYPACKAGE)
+        finally:
+            run(self.coverage, 'html')
+
     def _update_python_path(self):
         if 'PYTHONPATH' in os.environ:
             os.environ['PYTHONPATH'] = '{0}:{1}'.format(self.basedir, os.environ['PYTHONPATH'])
         else:
             os.environ['PYTHONPATH'] = self.basedir
+
+
+class TestIntegrationCommand (VirtualEnvCommandBase):
+    """Run live git with an installed git-remote-lafs on the commandline against a lafs-giab configuration."""
+
+    description = __doc__
+
+    def run_within_virtualenv(self):
+        url = 'lafs::foo-not-yet-implemented'
+
+        run(self.pip, 'install', '--force-reinstall', self.basedir)
+
+        os.environ['PATH'] = '{0}:{1}'.format(self.bindir, os.environ['PATH'])
+
+        run('git', 'push', url, url)
 
 
 def run(*args):
