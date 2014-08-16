@@ -19,19 +19,16 @@ class LineDispatcherProtocolTests (TestCase):
     def _test_lineReceived(self, m_maybeDeferred):
 
         x = 'bananas!'
-        m_handler = MagicMock()
 
-        ldp = LineDispatcherProtocol(m_handler)
+        ldp = LineDispatcherProtocol(sentinel.handler)
         ldp.transport = MagicMock()
 
         ldp.lineReceived(x)
 
-        self.assertEqual(m_handler.mock_calls, [call(x)])
-
         self.assertEqual(
             m_maybeDeferred.mock_calls,
-            [call(m_handler.return_value),
-             call(m_handler.return_value).addCallback(ANY)])
+            [call(sentinel.handler, x),
+             call(sentinel.handler, x).addCallback(ANY)])
 
         # Retrieve the internal callback:
         (_, args, _) = m_maybeDeferred.mock_calls[1]
