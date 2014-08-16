@@ -125,7 +125,8 @@ class TestIntegrationCommand (VirtualEnvCommandBase):
     def run_within_virtualenv(self):
         url = 'lafs::foo-not-yet-implemented'
 
-        run(self.pip, 'install', '--force-reinstall', self.basedir)
+        run(self.pip, 'uninstall', '--yes', 'git-remote-lafs')
+        run(self.pip, 'install', self.basedir)
 
         os.environ['PATH'] = '{0}:{1}'.format(self.bindir, os.environ['PATH'])
 
